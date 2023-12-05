@@ -1,0 +1,18 @@
+version: '3.3'
+name: superbus
+services:
+  redis:
+    container_name: redis
+    image: redis:7.0.8
+    ports:
+      - 6378:6379
+    command: /bin/sh -c 'redis-server --requirepass 42324232'
+    restart: unless-stopped
+
+  keydb:
+    container_name: keydb
+    image: eqalpha/keydb:alpine_x86_64_v6.3.4
+    ports:
+      - 6379:6379
+    command: /bin/sh -c 'keydb-server --requirepass 42324232'
+    restart: unless-stopped
