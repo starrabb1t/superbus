@@ -21,7 +21,15 @@ class Client:
 
     def getTask(self, task_id: str) -> Dict:
 
-        task = self.updater.get_task_by_id(task_id, with_data=True)            
+        task = self.updater.get_task_by_id(task_id)    
+
+        if task.status == "ERROR" or task.status == "SUCCESS":
+            data = self.updater.get_task_data_by_id(task_id)
+
+            task = task.dict()
+            task["data"] = data
+            return task
+              
         return task.dict()
 
     def pushTask(
@@ -56,7 +64,7 @@ class Client:
             if wait_result:
                 result = self.updater.wait_until_complete(task.id, wait_timeout, wait_polling)
                 logger.info(f"return response")
-                return result.dict()
+                return result
             else:
                 result = self.updater.get_task_by_id(task.id)
                 logger.info(f"return id")

@@ -3,7 +3,7 @@ from superbus import Worker
 from pydantic import BaseModel
 
 REDIS_HOST = "0.0.0.0"
-REDIS_PASSWORD = "123"
+REDIS_PASSWORD = "42324232"
 
 class TaskData(BaseModel):
     number_1: int
@@ -37,7 +37,7 @@ def multiply_numbers_job(data):
 
 
 # define worker operators dictionary
-OPERATORS = {"SUM_TASK": sum_numbers_job, "MULTIPLY_TASK": multiply_numbers_job}
+OPERATORS = {"SUM": sum_numbers_job, "MULTIPLY": multiply_numbers_job}
 
 if __name__ == "__main__":
     worker.run(OPERATORS)

@@ -38,7 +38,6 @@ class TaskModel(BaseModel):
     id: str                     # task identificator
     workflow: List              # graph of operators
     timestamp: Optional[str]    # latest timestamp
-    data: Optional[Dict]        # task data
     status: Optional[str]       # current status
     stage: Optional[str]        # current stage (name of operator)
     error: Optional[str]        # error message (empty if success)

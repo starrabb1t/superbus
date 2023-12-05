@@ -26,6 +26,8 @@ class Worker:
         for op_name in operators:
             self._redis.sadd("REGISTERED_OPERATORS", op_name)
 
+        task = None
+
         while True:
 
             try:
@@ -38,13 +40,16 @@ class Worker:
                         task_id = self._redis.rpop(op_name)
                         logger.info(f"received task '{task_id}'")
                         
-                        task = self.updater.get_task_by_id(task_id, with_data=True)
+                        task = self.updater.get_task_by_id(task_id)
+                        task_data = self.updater.get_task_data_by_id(task_id)
+
                         task.stage = op_name
                         self.updater.set_in_progress(task)
 
                         operator_func = operators[op_name]
-                        result_data = operator_func(task.data)
+                        result_data = operator_func(task_data)
                         result_data_json = json.dumps(result_data)
+                        
                         self._redis.hset("task_data", task.id, result_data_json)
                         keydb_expiremember(self._redis, "task_data", task.id)
 
@@ -60,7 +65,7 @@ class Worker:
                                 task.workflow.index(op_name) + 1
                             ]
                             task.stage = next_op_name
-                            task = self.updater.set_created(task)
+                            self.updater.set_created(task)
 
                             self._redis.lpush(next_op_name, task.id)
 
@@ -69,8 +74,9 @@ class Worker:
                             )
 
             except Exception as e:
+
                 try:
-                    self.updater.set_error(e, task)
+                    self.updater.set_error(str(e), task)
                     logger.error(
                         f"task '{task.id} failed'. Traceback: {traceback.format_exc()}"
                     )

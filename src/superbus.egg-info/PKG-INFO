@@ -1,7 +1,8 @@
 Metadata-Version: 2.1
 Name: superbus
-Version: 0.0.1
+Version: 0.0.2
 Summary: redis-based bus to communicate between microservices that handle long-running tasks
+Home-page: "https://github.com/starrabb1t/superbus",
 Author: starrabb1t
 Author-email: berzin@phystech.edu
 Classifier: Programming Language :: Python :: 3
@@ -14,4 +15,4 @@ Requires-Dist: redis==3.5.3
 Requires-Dist: httpx==0.24.1
 Requires-Dist: pydantic==1.9.1
 
-# superbus
+# ⚡️superbus
