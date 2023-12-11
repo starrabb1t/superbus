@@ -57,8 +57,11 @@ class Worker:
                             self.updater.set_success(task)
                             logger.info(f"task succeeded '{task.id}'")
 
+                            task_dict = task.dict()
+                            task_dict["data"] = result_data
+
                             if task.webhook:
-                                self.updater.send_webhook_post(task, task.webhook)
+                                self.updater.send_webhook_post(task_dict, task.webhook)
 
                         else:
                             next_op_name = task.workflow[
