@@ -54,13 +54,13 @@ class Worker:
                         keydb_expiremember(self._redis, "task_data", task.id)
 
                         if task.workflow.index(op_name) == len(task.workflow) - 1:
+            
                             self.updater.set_success(task)
                             logger.info(f"task succeeded '{task.id}'")
 
-                            task_dict = task.dict()
-                            task_dict["data"] = result_data
-
                             if task.webhook:
+                                task_dict = task.dict()
+                                task_dict["data"] = result_data
                                 self.updater.send_webhook_post(task_dict, task.webhook)
 
                         else:

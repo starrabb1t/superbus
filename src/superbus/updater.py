@@ -87,15 +87,11 @@ class StatusUpdater:
                 return self.get_timeout(task)
 
     def send_webhook_post(self, task_dict : Dict, url : str) -> None:
-        try:
-            task_id = task_dict["id"]
-            task_json = json.dumps(task_dict)
+        
+        task_id = task_dict["id"]
+        task_json = json.dumps(task_dict)
 
-            r = httpx.post(url, json=task_json)
-            logger.info(
-                f"post to webhook {url} for task '{task_id}' completed with status {r.status_code}"
-            )
-        except:
-            logger.error(
-                f"post to webhook {url} failed! Traceback: {traceback.format_exc()}"
-            )
+        r = httpx.post(url, json=task_json)
+        logger.info(
+            f"post to webhook {url} for task '{task_id}' completed with status {r.status_code}"
+        )
