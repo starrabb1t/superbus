@@ -90,6 +90,7 @@ class Worker:
 
                 try:
                     if task.webhook:
-                        self.updater.send_webhook_post(task, task.webhook)
+                        task_dict = task.dict()
+                        self.updater.send_webhook_post(task_dict, task.webhook)
                 except:
                     logger.error(f"post to webhook failed! Traceback: {traceback.format_exc()}")
