@@ -31,13 +31,17 @@ class Worker:
         while True:
 
             try:
-                time.sleep(self.polling_period)  # slightly reduce cpu usage while wait
+                time.sleep(self.polling_period)
 
                 for op_name in operators:
 
                     if self._redis.llen(op_name) != 0:
 
                         task_id = self._redis.rpop(op_name)
+
+                        if task_id is None:
+                            continue
+
                         logger.info(f"received task '{task_id}'")
                         
                         task = self.updater.get_task_by_id(task_id)
