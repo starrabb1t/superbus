@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: superbus
-Version: 0.0.7
+Version: 0.0.8
 Summary: redis-based bus to communicate between microservices that handle long-running tasks
 Home-page: https://github.com/starrabb1t/superbus
 Author: starrabb1t
@@ -13,7 +13,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: redis==3.5.3
 Requires-Dist: httpx==0.24.1
-Requires-Dist: pydantic==1.9.1
+Requires-Dist: pydantic>=1.9.1
 
 # ⚡️superbus
 Redis-based bus to create multi-stage pipelines for long-running tasks

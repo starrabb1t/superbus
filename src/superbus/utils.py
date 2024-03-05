@@ -37,11 +37,11 @@ logger = get_logger()
 class TaskModel(BaseModel):
     id: str                     # task identificator
     workflow: List              # graph of operators
-    timestamp: Optional[str]    # latest timestamp
-    status: Optional[str]       # current status
-    stage: Optional[str]        # current stage (name of operator)
-    error: Optional[str]        # error message (empty if success)
-    webhook: Optional[str]      # webhook url to send POST with result
+    timestamp: Optional[str]=None    # latest timestamp
+    status: Optional[str]=None       # current status
+    stage: Optional[str]=None        # current stage (name of operator)
+    error: Optional[str]=None        # error message (empty if success)
+    webhook: Optional[str]=None      # webhook url to send POST with result
 
 def keydb_expiremember(keydb_instance, key, subkey, delay=REDIS_KEY_EXP_TIME_SEC, unit='s'):
     """
