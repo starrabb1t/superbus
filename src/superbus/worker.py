@@ -1,25 +1,28 @@
 from .updater import *
 
-WORKER_POLLING_PERIOD_SEC = 0.1
 
 class Worker:
     def __init__(
         self,
         redis_host,
         redis_port=DEFAULT_REDIS_PORT,
-        redis_password = None,
-        polling_period = WORKER_POLLING_PERIOD_SEC
+        redis_password=None,
+        polling_period=WORKER_POLLING_PERIOD_SEC,
+        logical_db=0
     ):
-        
+
         if redis_password:
-            self._redis = redis.Redis(host=redis_host, port=redis_port, password=redis_password)
+            self._redis = redis.Redis(
+                host=redis_host, port=redis_port, password=redis_password, db=logical_db)
         else:
-            self._redis = redis.Redis(host=redis_host, port=redis_port)
+            self._redis = redis.Redis(
+                host=redis_host, port=redis_port, db=logical_db)
 
         self.polling_period = polling_period
         self.updater = StatusUpdater(self._redis)
 
         logging.info("worker ready!")
+        
 
     def run(self, operators: dict):
 
@@ -27,8 +30,9 @@ class Worker:
             self._redis.sadd("REGISTERED_OPERATORS", op_name)
 
         task = None
+        terminator = Terminator()
 
-        while True:
+        while not terminator.terminate:
 
             try:
                 time.sleep(self.polling_period)
@@ -43,7 +47,7 @@ class Worker:
                             continue
 
                         logger.info(f"received task '{task_id}'")
-                        
+
                         task = self.updater.get_task_by_id(task_id)
                         task_data = self.updater.get_task_data_by_id(task_id)
 
@@ -53,19 +57,21 @@ class Worker:
                         operator_func = operators[op_name]
                         result_data = operator_func(task_data)
                         result_data_json = json.dumps(result_data)
-                        
-                        self._redis.hset("task_data", task.id, result_data_json)
+
+                        self._redis.hset("task_data", task.id,
+                                         result_data_json)
                         keydb_expiremember(self._redis, "task_data", task.id)
 
                         if task.workflow.index(op_name) == len(task.workflow) - 1:
-            
+
                             self.updater.set_success(task)
                             logger.info(f"task succeeded '{task.id}'")
 
                             if task.webhook:
                                 task_dict = task.dict()
                                 task_dict["data"] = result_data
-                                self.updater.send_webhook_post(task_dict, task.webhook)
+                                self.updater.send_webhook_post(
+                                    task_dict, task.webhook)
 
                         else:
                             next_op_name = task.workflow[
@@ -97,4 +103,7 @@ class Worker:
                         task_dict = task.dict()
                         self.updater.send_webhook_post(task_dict, task.webhook)
                 except:
-                    logger.error(f"post to webhook failed! Traceback: {traceback.format_exc()}")
+                    logger.error(
+                        f"post to webhook failed! Traceback: {traceback.format_exc()}")
+
+        logging.info("worker terminated!")

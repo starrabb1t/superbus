@@ -1,10 +1,8 @@
 import time
 from datetime import datetime
 import httpx
-import traceback
 from .utils import *
 import redis
-
 
 class StatusUpdater:
     def __init__(self, r: redis.Redis):
@@ -91,7 +89,11 @@ class StatusUpdater:
         task_id = task_dict["id"]
         task_json = json.dumps(task_dict)
 
-        r = httpx.post(url, json=task_json)
-        logger.info(
-            f"post to webhook {url} for task '{task_id}' completed with status {r.status_code}"
-        )
+        try:
+            r = httpx.post(url, json=task_json, timeout=DEFAULT_WEBHOOK_TIMEOUT_SEC)
+            logger.info(
+                f"post to webhook {url} for task '{task_id}' completed with status {r.status_code}"
+            )
+        except httpx.TimeoutException as e:
+            logging.warning(e)
+

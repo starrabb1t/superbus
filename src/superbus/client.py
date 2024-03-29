@@ -1,21 +1,19 @@
 import uuid
 from .updater import *
 
-WAIT_TIMEOUT_SEC = 300
-WAIT_POLLING_PERIOD_SEC = 1
-
 class Client:
     def __init__(
         self,
         redis_host,
         redis_port=DEFAULT_REDIS_PORT,
-        redis_password = None
+        redis_password = None,
+        logical_db=0
     ):
 
         if redis_password:
-            self._redis = redis.Redis(host=redis_host, port=redis_port, password=redis_password)
+            self._redis = redis.Redis(host=redis_host, port=redis_port, password=redis_password, db=logical_db)
         else:
-            self._redis = redis.Redis(host=redis_host, port=redis_port)
+            self._redis = redis.Redis(host=redis_host, port=redis_port, db=logical_db)
 
         self.updater = StatusUpdater(self._redis)
 
@@ -32,13 +30,27 @@ class Client:
               
         return task.dict()
 
+
+    def getQueue(self, workflow: List[str] = None):
+
+        queue = {}
+
+        if workflow:
+            for node in workflow:
+                queue[node] = self._redis.llen(node)
+        else:
+            for node in self._redis.smembers("REGISTERED_OPERATORS"):
+                queue[node.decode()] = self._redis.llen(node)
+
+        return queue
+
     def pushTask(
         self,
         task_data: Dict,
         workflow: List,
         wait_result=False,
-        wait_timeout = WAIT_TIMEOUT_SEC,
-        wait_polling = WAIT_POLLING_PERIOD_SEC,
+        wait_timeout = CLIENT_WAIT_TIMEOUT_SEC,
+        wait_polling = CLIENT_WAIT_POLLING_PERIOD_SEC,
         webhook=None,
     ) -> Dict:
         

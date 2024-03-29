@@ -2,7 +2,7 @@ from superbus import Client
 
 REDIS_HOST = "0.0.0.0"
 REDIS_PASSWORD = "42324232"
-WEBHOOK_URL = "http://0.0.0.0:8080"
+WEBHOOK_URL = "http://0.0.0.0:9090"
 BAD_WEBHOOK_URL = "http://bad_webhook"
 
 bus = Client(redis_host=REDIS_HOST, redis_password=REDIS_PASSWORD)
