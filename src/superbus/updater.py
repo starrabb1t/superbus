@@ -94,6 +94,6 @@ class StatusUpdater:
             logger.info(
                 f"post to webhook {url} for task '{task_id}' completed with status {r.status_code}"
             )
-        except httpx.TimeoutException as e:
-            logging.warning(e)
+        except httpx.TimeoutException:
+            logger.warning(traceback.format_exc())
 

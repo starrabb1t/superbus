@@ -21,7 +21,7 @@ class Worker:
         self.polling_period = polling_period
         self.updater = StatusUpdater(self._redis)
 
-        logging.info("worker ready!")
+        logger.info("worker ready!")
         
 
     def run(self, operators: dict):
@@ -106,4 +106,4 @@ class Worker:
                     logger.error(
                         f"post to webhook failed! Traceback: {traceback.format_exc()}")
 
-        logging.info("worker terminated!")
+        logger.info("worker terminated!")

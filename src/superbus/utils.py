@@ -77,4 +77,4 @@ class Terminator:
 
     def terminate_gracefully(self, signum, frame):
         self.terminate = True
-        logging.warning(f"got signal 0x0{signum}!")
+        logger.warning(f"got signal 0x0{signum}!")
