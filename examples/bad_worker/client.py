@@ -1,7 +1,7 @@
 from superbus import Client
 
 REDIS_HOST = "0.0.0.0"
-REDIS_PASSWORD = "42324232"
+REDIS_PASSWORD = "12345678"
 
 bus = Client(redis_host=REDIS_HOST, redis_password=REDIS_PASSWORD)
 

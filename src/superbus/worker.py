@@ -13,10 +13,27 @@ class Worker:
 
         if redis_password:
             self._redis = redis.Redis(
-                host=redis_host, port=redis_port, password=redis_password, db=logical_db)
+                host=redis_host, 
+                port=redis_port, 
+                password=redis_password, 
+                db=logical_db,
+                health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SEC,
+                socket_timeout=REDIS_CONNECTION_TIMEOUT_SEC, 
+                socket_keepalive=True,
+                socket_connect_timeout=REDIS_CONNECTION_TIMEOUT_SEC, 
+                retry_on_timeout=True
+            )
         else:
             self._redis = redis.Redis(
-                host=redis_host, port=redis_port, db=logical_db)
+                host=redis_host, 
+                port=redis_port, 
+                db=logical_db,
+                health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SEC,
+                socket_timeout=REDIS_CONNECTION_TIMEOUT_SEC, 
+                socket_keepalive=True,
+                socket_connect_timeout=REDIS_CONNECTION_TIMEOUT_SEC, 
+                retry_on_timeout=True
+            )
 
         self.polling_period = polling_period
         self.updater = StatusUpdater(self._redis)

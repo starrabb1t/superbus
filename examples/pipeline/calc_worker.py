@@ -3,7 +3,7 @@ from superbus import Worker
 from pydantic import BaseModel
 
 REDIS_HOST = "0.0.0.0"
-REDIS_PASSWORD = "42324232"
+REDIS_PASSWORD = "12345678"
 
 class TaskData(BaseModel):
     number_1: int

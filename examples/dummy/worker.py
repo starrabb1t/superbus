@@ -1,18 +1,22 @@
 import time
 from superbus import Worker
 from pydantic import BaseModel
+import random
 
 REDIS_HOST = "0.0.0.0"
-REDIS_PASSWORD = "42324232"
+REDIS_PASSWORD = "12345678"
+
 
 class TaskData(BaseModel):
     number_1: int
     number_2: int
 
+
 class ResponseData(BaseModel):
     number_ans: int
 
 worker = Worker(redis_host=REDIS_HOST, redis_password=REDIS_PASSWORD)
+
 
 def sum_numbers_job(data):
     data = TaskData(**data)
@@ -37,7 +41,10 @@ def multiply_numbers_job(data):
 
 
 # define worker operators dictionary
-OPERATORS = {"SUM": sum_numbers_job, "MULTIPLY": multiply_numbers_job}
+OPERATORS = {
+    "SUM": sum_numbers_job, 
+    "MULTIPLY": multiply_numbers_job
+}
 
 if __name__ == "__main__":
     worker.run(OPERATORS)
