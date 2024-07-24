@@ -2,7 +2,13 @@ import logging
 import json
 from pydantic import BaseModel
 from typing import Dict, List, Optional
+import signal
+import traceback
 
+CLIENT_WAIT_TIMEOUT_SEC = 300
+CLIENT_WAIT_POLLING_PERIOD_SEC = 1
+DEFAULT_WEBHOOK_TIMEOUT_SEC = 5
+WORKER_POLLING_PERIOD_SEC = 0.1
 REDIS_KEY_EXP_TIME_SEC = 6 * 3600
 DEFAULT_REDIS_PORT = 6379
 TIMESTAMP_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%f"
@@ -37,11 +43,11 @@ logger = get_logger()
 class TaskModel(BaseModel):
     id: str                     # task identificator
     workflow: List              # graph of operators
-    timestamp: Optional[str]    # latest timestamp
-    status: Optional[str]       # current status
-    stage: Optional[str]        # current stage (name of operator)
-    error: Optional[str]        # error message (empty if success)
-    webhook: Optional[str]      # webhook url to send POST with result
+    timestamp: Optional[str]=None    # latest timestamp
+    status: Optional[str]=None       # current status
+    stage: Optional[str]=None        # current stage (name of operator)
+    error: Optional[str]=None        # error message (empty if success)
+    webhook: Optional[str]=None      # webhook url to send POST with result
 
 def keydb_expiremember(keydb_instance, key, subkey, delay=REDIS_KEY_EXP_TIME_SEC, unit='s'):
     """
@@ -61,3 +67,14 @@ def keydb_expiremember(keydb_instance, key, subkey, delay=REDIS_KEY_EXP_TIME_SEC
         args.append(unit)
 
     return keydb_instance.execute_command('EXPIREMEMBER', *args)
+
+class Terminator:
+
+    def __init__(self):
+        self.terminate = False
+        signal.signal(signal.SIGINT, self.terminate_gracefully)
+        signal.signal(signal.SIGTERM, self.terminate_gracefully)
+
+    def terminate_gracefully(self, signum, frame):
+        self.terminate = True
+        logger.warning(f"got signal 0x0{signum}!")
