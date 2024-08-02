@@ -86,6 +86,9 @@ class StatusUpdater:
 
     def send_webhook_post(self, task_dict : Dict, url : str) -> None:
         
+        if "data" in task_dict:
+            del task_dict["data"]
+
         task_id = task_dict["id"]
         task_json = json.dumps(task_dict)
 
