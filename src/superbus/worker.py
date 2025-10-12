@@ -8,7 +8,8 @@ class Worker:
         redis_port=DEFAULT_REDIS_PORT,
         redis_password=None,
         polling_period=WORKER_POLLING_PERIOD_SEC,
-        logical_db=0
+        logical_db=0,
+        expire_delay=None
     ):
 
         if redis_password:
@@ -36,6 +37,7 @@ class Worker:
             )
 
         self.polling_period = polling_period
+        self.expire_delay = expire_delay
         self.updater = StatusUpdater(self._redis)
 
         logger.info("worker ready!")
@@ -75,9 +77,9 @@ class Worker:
                         result_data = operator_func(task_data)
                         result_data_json = json.dumps(result_data)
 
-                        self._redis.hset("task_data", task.id,
-                                         result_data_json)
-                        keydb_expiremember(self._redis, "task_data", task.id)
+                        self._redis.hset("task_data", task.id, result_data_json)
+                        if self.expire_delay:
+                            keydb_expiremember(self._redis, "task_data", task.id, delay=self.expire_delay)
 
                         if task.workflow.index(op_name) == len(task.workflow) - 1:
 

@@ -15,7 +15,7 @@ class TaskData(BaseModel):
 class ResponseData(BaseModel):
     number_ans: int
 
-worker = Worker(redis_host=REDIS_HOST, redis_password=REDIS_PASSWORD)
+worker = Worker(redis_host=REDIS_HOST) #, redis_password=REDIS_PASSWORD)
 
 
 def sum_numbers_job(data):

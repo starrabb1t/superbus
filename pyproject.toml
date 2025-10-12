@@ -1,6 +1,21 @@
+[tool.poetry]
+name = "superbus"
+version = "1.0.0"
+description = "Redis-based bus to communicate between microservices that handle long-running tasks"
+authors = ["starrabb1t <berzin@phystech.edu>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/starrabb1t/superbus"
+repository = "https://github.com/starrabb1t/superbus"
+keywords = ["redis", "microservices", "bus", "async", "tasks"]
+packages = [{ include = "superbus", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+redis = ">=3.5.3"
+httpx = ">=0.24.1"
+pydantic = ">=1.9.1,<3.0.0"
+
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -9,7 +9,7 @@ CLIENT_WAIT_TIMEOUT_SEC = 300
 CLIENT_WAIT_POLLING_PERIOD_SEC = 1
 DEFAULT_WEBHOOK_TIMEOUT_SEC = 5
 WORKER_POLLING_PERIOD_SEC = 0.1
-REDIS_KEY_EXP_TIME_SEC = 6 * 3600
+REDIS_KEY_EXP_TIME_SEC = 3600
 DEFAULT_REDIS_PORT = 6379
 TIMESTAMP_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%f"
 REDIS_CONNECTION_TIMEOUT_SEC = 10
@@ -51,24 +51,43 @@ class TaskModel(BaseModel):
     error: Optional[str]=None        # error message (empty if success)
     webhook: Optional[str]=None      # webhook url to send POST with result
 
-def keydb_expiremember(keydb_instance, key, subkey, delay=REDIS_KEY_EXP_TIME_SEC, unit='s'):
+def keydb_expiremember(redis_instance, key, subkey, delay=REDIS_KEY_EXP_TIME_SEC, unit='s'):
     """
-    Set timeout on a subkey. This feature only available on KeyDB
-    https://docs.keydb.dev/docs/commands/#expiremember
-    :param key: key added by `SADD key [subkeys]`
-    :param subkey: subkey on the set
-    :param delay: timeout
-    :param unit: `s` or `ms`
-    :return: 0 if the timeout was set, otherwise 0
+    Safe expiration for both KeyDB and Redis.
+
+    - On KeyDB: uses EXPIREMEMBER
+    - On Redis: fallback to normal EXPIRE (sets timeout for whole key)
     """
-    args = [key, subkey, delay]
-    if unit is not None and unit not in ['s', 'ms']:
-        raise ValueError("`unit` must be s or ms")
+    try:
+        # Проверяем тип движка, если ранее определён флаг
+        is_keydb = getattr(redis_instance, "is_keydb", None)
+        if is_keydb is None:
+            try:
+                info = redis_instance.info("server")
+                is_keydb = "keydb_version" in info
+                redis_instance.is_keydb = is_keydb
+            except Exception:
+                is_keydb = False
 
-    if unit:
-        args.append(unit)
+        if is_keydb:
+            args = [key, subkey, delay]
+            if unit is not None and unit not in ["s", "ms"]:
+                raise ValueError("`unit` must be 's' or 'ms'")
+            if unit:
+                args.append(unit)
+            return redis_instance.execute_command("EXPIREMEMBER", *args)
+        else:
+            # fallback — ничего не делаем на Redis
+            logger.debug("Redis detected: skipping EXPIREMEMBER fallback (no subkey TTL support)")
+            return None
 
-    return keydb_instance.execute_command('EXPIREMEMBER', *args)
+    except Exception as e:
+        logger.warning(f"keydb_expiremember fallback triggered: {e}")
+        try:
+            return redis_instance.expire(key, delay)
+        except Exception as e2:
+            logger.error(f"expire() also failed: {e2}")
+            return None
 
 class Terminator:
 

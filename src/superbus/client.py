@@ -6,8 +6,9 @@ class Client:
         self,
         redis_host,
         redis_port=DEFAULT_REDIS_PORT,
-        redis_password = None,
-        logical_db=0
+        redis_password=None,
+        logical_db=0,
+        expire_delay=None
     ):
 
         if redis_password:
@@ -34,6 +35,7 @@ class Client:
                 retry_on_timeout=True
             )
 
+        self.expire_delay = expire_delay
         self.updater = StatusUpdater(self._redis)
 
     def getTask(self, task_id: str) -> Dict:
@@ -48,6 +50,41 @@ class Client:
             return task
               
         return task.dict()
+
+    def listTasks(self) -> List[str]:
+        """
+        Возвращает список всех Task ID, присутствующих в Redis.
+        """
+        keys = self._redis.hkeys("tasks")
+        return [k.decode() for k in keys]
+
+    def clearCompleted(self) -> int:
+        """
+        Удаляет завершённые задачи (SUCCESS/ERROR) и "висячие" task_data-записи,
+        у которых нет对应 записи в tasks.
+        Возвращает количество удалённых элементов.
+        """
+        removed = 0
+        tasks = self._redis.hgetall("tasks")
+        task_data = self._redis.hkeys("task_data")
+        valid_ids = set(tasks.keys())
+
+        # 1️⃣ Чистим завершённые задачи
+        for tid, task_json in tasks.items():
+            task = json.loads(task_json)
+            if task.get("status") in ("SUCCESS", "ERROR"):
+                self._redis.hdel("tasks", tid)
+                self._redis.hdel("task_data", tid)
+                removed += 1
+
+        # 2️⃣ Удаляем "висячие" task_data
+        for tid in task_data:
+            if tid not in valid_ids:
+                self._redis.hdel("task_data", tid)
+                removed += 1
+
+        logger.info(f"Removed {removed} obsolete tasks (completed + orphaned)")
+        return removed
 
 
     def getQueue(self, workflow: List[str] = None):
@@ -85,7 +122,8 @@ class Client:
 
             task_data_json =  json.dumps(task_data)
             self._redis.hset("task_data", task.id, task_data_json)
-            keydb_expiremember(self._redis, "task_data", task.id)
+            if self.expire_delay:
+                keydb_expiremember(self._redis, "task_data", task.id, delay=self.expire_delay)
             
             self.updater.set_created(task)
             self._redis.lpush(workflow[0], task.id)
