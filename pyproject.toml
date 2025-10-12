@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "superbus"
-version = "1.0.0"
+version = "1.0.1"
 description = "Redis-based bus to communicate between microservices that handle long-running tasks"
 authors = ["starrabb1t <berzin@phystech.edu>"]
 license = "MIT"
